@@ -10,7 +10,8 @@ pip install -r requirements.txt
 ```
 
 For audio extraction you also need [`ffmpeg`](https://ffmpeg.org/) available on
-your `PATH`.
+your `PATH`. `curl_cffi` is pinned because TikTok blocks requests that don't
+mimic a real browser's TLS fingerprint; yt-dlp uses it to impersonate one.
 
 ## Usage
 
