@@ -17,7 +17,7 @@ except ImportError:
     sys.exit(1)
 
 
-def build_options(mode: str, output_dir: Path) -> dict:
+def build_options(mode: str, output_dir: Path, insecure: bool = False) -> dict:
     output_dir.mkdir(parents=True, exist_ok=True)
     outtmpl = str(output_dir / "%(uploader)s - %(id)s.%(ext)s")
 
@@ -27,6 +27,7 @@ def build_options(mode: str, output_dir: Path) -> dict:
         "noplaylist": True,
         "quiet": False,
         "no_warnings": False,
+        "nocheckcertificate": insecure,
     }
 
     if mode == "audio":
@@ -49,8 +50,8 @@ def build_options(mode: str, output_dir: Path) -> dict:
     return opts
 
 
-def download(urls: list[str], mode: str, output_dir: Path) -> int:
-    opts = build_options(mode, output_dir)
+def download(urls: list[str], mode: str, output_dir: Path, insecure: bool = False) -> int:
+    opts = build_options(mode, output_dir, insecure=insecure)
     with yt_dlp.YoutubeDL(opts) as ydl:
         return ydl.download(urls)
 
@@ -78,13 +79,19 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default=Path("downloads"),
         help="Output directory (default: ./downloads).",
     )
+    parser.add_argument(
+        "--insecure",
+        action="store_true",
+        help="Skip TLS certificate verification (use only on trusted networks, "
+             "e.g. behind a corporate MITM proxy).",
+    )
     return parser.parse_args(argv)
 
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     try:
-        return download(args.urls, args.mode, args.output)
+        return download(args.urls, args.mode, args.output, insecure=args.insecure)
     except yt_dlp.utils.DownloadError as err:
         sys.stderr.write(f"Download failed: {err}\n")
         return 1
